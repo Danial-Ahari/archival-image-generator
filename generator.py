@@ -109,9 +109,9 @@ def generate(event):
 	format = clicked.get()
 	# Initialize and generate a files list appropriately
 	files = []
-	files = os.listdir(in_dir)
 	fin_files = []
-	if format == "TIFF":
+	if format == "TIFF": # Here, we are using TIFF masters, the nominal way to run this program.
+		files = os.listdir(in_dir + "master\\")
 		for file in files:
 			if pt.get() == 0:
 				if file[-4:] == ".tif":
@@ -121,27 +121,39 @@ def generate(event):
 					if file[:len(filename)] == filename:
 						fin_files.append(file)
 	else:
-		for file in files:
-			if pt.get() == 0:
-				if file[-4:] == ".jpg":
-					fin_files.append(file)
-			else:
-				if file[-4:] == ".jpg":
-					if file[:len(filename)] == filename:
+		if do_jpeg == 0: # Here, we are using JPEGs to generate further images.
+			files = os.listdir(in_dir + "altered\\")
+			for file in files:
+				if pt.get() == 0:
+					if file[-4:] == ".jpg" and file[-8:] != "_web.jpg":
 						fin_files.append(file)
+				else:
+					if file[-4:] == ".jpg" and file[-8:] != "_web.jpg":
+						if file[:len(filename)] == filename:
+							fin_files.append(file)
+		else: # Here, we are using JPEG, but we do not have altered files, assume master JPEG files.
+			files = os.listdir(in_dir + "master\\")
+			for file in files:
+				if pt.get() == 0:
+					if file[-4:] == ".jpg":
+						fin_files.append(file)
+				else:
+					if file[-4:] == ".jpg":
+						if file[:len(filename)] == filename:
+							fin_files.append(file)
 	# Conditionally perform the actual image generation, after creating folders for the outputs.
-	if(do_jpeg == 1):
+	if(do_jpeg == 1): # Make altered directory.
 		try:
 			os.mkdir(in_dir + "altered\\")
 		except FileExistsError:
 			print("Altered directory already exists.")
-	for file in fin_files:
+	for file in fin_files: # Get the basename and do JPEG and file web file creation
 		basename = file[:-4]
 		if(do_jpeg == 1):
 			make_jpeg(basename, im_dir, in_dir)
 		if(do_web == 1):
 			make_web(basename, im_dir, in_dir, dpi, size)
-	if(do_pdf == 1):
+	if(do_pdf == 1): # Do PDF creation
 		try:
 			os.mkdir(in_dir + "upload\\")
 		except FileExistsError:
