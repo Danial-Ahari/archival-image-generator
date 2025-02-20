@@ -16,6 +16,7 @@ Once the pre-requisites are installed, it should be as simple as double-clicking
 
 ## Supported major inputs
 - TIFF "master" files
+- JPEG "master" files
 - JPEG "altered" files
 
 ## Intermediate files
@@ -34,10 +35,9 @@ Both input directories should contain the trailing \ at the end to indicate that
 This should be the full path to where the ImageMagick executables (namely magick and identify) are located. If using the portable version, this is the folder within the folder resulting from unzipping the ZIP file.
 
 ### TIFF/JPEG files
-This should be the full path to where the TIFF files are located (if using TIFF input) or the full path to the directory containing the "altered" directory (not the altered directory itself; if using JPEG input). Alternately, select the checkbox below this text box and use a file pattern consisting of the directory followed by the start of the file name, e.g. abc_defg_000001
+This should be the full path to the parent directory containing "master", "altered", and "upload" (the latter two can be created by this program if not present). Alternately, select the checkbox below this text box and use a file pattern consisting of the parent directory followed by the start of the file name, e.g. abc_defg_000001 DO NOT use the full path to the files containing that file pattern (e.g. the master, altered, or upload directories).
 
-File patterns are tested to work for TIFF inputs, since it assumes JPEGs are located in an "altered" directory and are an intermediate file, this likely won't work for them.
-If using file patterns only to generate PDFs, it does not matter, simply input the directory that contains the "upload" folder and "altered" folder (which should already have "web" copies) followed by the file pattern as described above. It will only use that file pattern and search the "altered" folder for web copies.
+File patterns are tested to work for TIFF inputs. JPEG inputs are untested, but should work.
 
 ## Input Type
 Select the main type of file being input, if the main input is being utilized for the current operation (that is, if at least "altered" or "web" files are being generated).
@@ -84,7 +84,8 @@ Given: 39 TIFF files representing objects xxx_xxxx_749 to xxx_xxxx_765
 
 # Future Plans
 The below are features that may be added.
-- Generation that is able to treat JPEGs as "master" (low priority)
-- Restructure input file structure to assume "master" is in a directory within the given directory (medium priority)
+- ~~Generation that is able to treat JPEGs as "master" (low priority)~~
+- ~~Restructure input file structure to assume "master" is in a directory within the given directory (medium priority)~~
 - Make the interface look a little bit nicer (Tkinter is a bit of a limitation here) (low priority)
 - Port it to the PythonMagick library, as opposed to using native ImageMagick (low priority)
+- Make it save most of the config to a config file for later loading, so one doesn't have to retype (medium priority)

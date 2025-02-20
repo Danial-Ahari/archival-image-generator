@@ -13,7 +13,7 @@ clicked = StringVar()
 clicked.set("TIFF")
 
 # Make all our GUI objects, named appropriately
-L_title = Label(frame, text = "This is the digitization assistant. WARNING: This program will overwrite files. Make sure this is the only program generating the target file.")
+L_title = Label(frame, text = "This is the digitization assistant v 0.2.0. WARNING: This program will overwrite files. Make sure this is the only program generating the target file.")
 L_title.pack()
 L_ph = Label(frame)
 L_ph.pack()
@@ -21,7 +21,7 @@ L_im = Label(frame, text = "Directory with image magick.")
 L_im.pack()
 T_im = Text(frame, height = 1)
 T_im.pack()
-L_in = Label(frame, text = "Directory with TIFF or JPG inputs.")
+L_in = Label(frame, text = "Parent directory of the object/collection or parent directory + file pattern")
 L_in.pack()
 T_in = Text(frame, height = 1)
 T_in.pack()
@@ -57,8 +57,11 @@ B_runner = Button(frame, text="Generate files")
 B_runner.pack()
 
 # This function makes a jpeg by calling imagemagick on an input TIFF or JPEG and outputting a 100% quality jpeg
-def make_jpeg(file, im_dir, in_dir):
-	process = subprocess.Popen(im_dir + "magick.exe -quality 100 \"" + in_dir + file + ".tif\" \"" + in_dir + "altered\\" + file + ".jpg\"", shell=TRUE, stdout=subprocess.PIPE)
+def make_jpeg(file, im_dir, in_dir, format):
+	if format == "TIFF":
+		process = subprocess.Popen(im_dir + "magick.exe -quality 100 \"" + in_dir + "master\\" + file + ".tif\" \"" + in_dir + "altered\\" + file + ".jpg\"", shell=TRUE, stdout=subprocess.PIPE)
+	else:
+		process = subprocess.Popen(im_dir + "magick.exe -quality 100 \"" + in_dir + "master\\" + file + ".jpg\" \"" + in_dir + "altered\\" + file + ".jpg\"", shell=TRUE, stdout=subprocess.PIPE)
 	process.wait()
 
 # This function makes a web copy from the full DPI JPEG, by using imagemagick to scale it to size pixels at dpi DPI
@@ -109,9 +112,9 @@ def generate(event):
 	format = clicked.get()
 	# Initialize and generate a files list appropriately
 	files = []
-	files = os.listdir(in_dir)
 	fin_files = []
-	if format == "TIFF":
+	if format == "TIFF": # Here, we are using TIFF masters, the nominal way to run this program.
+		files = os.listdir(in_dir + "master\\")
 		for file in files:
 			if pt.get() == 0:
 				if file[-4:] == ".tif":
@@ -121,27 +124,39 @@ def generate(event):
 					if file[:len(filename)] == filename:
 						fin_files.append(file)
 	else:
-		for file in files:
-			if pt.get() == 0:
-				if file[-4:] == ".jpg":
-					fin_files.append(file)
-			else:
-				if file[-4:] == ".jpg":
-					if file[:len(filename)] == filename:
+		if do_jpeg == 0: # Here, we are using JPEGs to generate further images.
+			files = os.listdir(in_dir + "altered\\")
+			for file in files:
+				if pt.get() == 0:
+					if file[-4:] == ".jpg" and file[-8:] != "_web.jpg":
 						fin_files.append(file)
+				else:
+					if file[-4:] == ".jpg" and file[-8:] != "_web.jpg":
+						if file[:len(filename)] == filename:
+							fin_files.append(file)
+		else: # Here, we are using JPEG, but we do not have altered files, assume master JPEG files.
+			files = os.listdir(in_dir + "master\\")
+			for file in files:
+				if pt.get() == 0:
+					if file[-4:] == ".jpg":
+						fin_files.append(file)
+				else:
+					if file[-4:] == ".jpg":
+						if file[:len(filename)] == filename:
+							fin_files.append(file)
 	# Conditionally perform the actual image generation, after creating folders for the outputs.
-	if(do_jpeg == 1):
+	if(do_jpeg == 1): # Make altered directory.
 		try:
 			os.mkdir(in_dir + "altered\\")
 		except FileExistsError:
 			print("Altered directory already exists.")
-	for file in fin_files:
+	for file in fin_files: # Get the basename and do JPEG and file web file creation
 		basename = file[:-4]
 		if(do_jpeg == 1):
-			make_jpeg(basename, im_dir, in_dir)
+			make_jpeg(basename, im_dir, in_dir, format)
 		if(do_web == 1):
 			make_web(basename, im_dir, in_dir, dpi, size)
-	if(do_pdf == 1):
+	if(do_pdf == 1): # Do PDF creation
 		try:
 			os.mkdir(in_dir + "upload\\")
 		except FileExistsError:
@@ -154,5 +169,5 @@ def generate(event):
 B_runner.bind('<Button-1>', generate)
 
 # Start the window
-root.title("Digitization File Generator Assistant")
+root.title("Digitization File Generator Assistant v0.2.0")
 root.mainloop()
