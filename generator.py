@@ -3,6 +3,42 @@ from tkinter import *
 from tkinter import messagebox
 import os
 import subprocess
+import time
+
+im_dir_in = ""
+ma_dir = ""
+pat_bool = 1
+input_type = "TIFF"
+output_dpi = "150"
+output_size = "1500"
+pdf_name = ""
+alt_bool = 0
+web_bool = 0
+pdf_bool = 0
+
+if os.path.exists("config.cfg"):
+	# Open our config file
+	file = open("config.cfg", "r")
+	im_dir_in = file.readline().split('-')[1][:-1]
+	ma_dir = file.readline().split('-')[1][:-1]
+	pat_bool = int(file.readline().split('-')[1])
+	input_type = file.readline().split('-')[1][:-1]
+	output_dpi = file.readline().split('-')[1][:-1]
+	output_size = file.readline().split('-')[1][:-1]
+	pdf_name = file.readline().split('-')[1][:-1]
+	alt_bool = int(file.readline().split('-')[1])
+	web_bool = int(file.readline().split('-')[1])
+	pdf_bool = int(file.readline().split('-')[1])
+	file.close()
+
+im_dir = im_dir_in
+in_dir = ma_dir
+dpi = output_dpi
+size = output_size
+do_jpeg = alt_bool
+do_web = web_bool
+do_pdf = pdf_bool
+format = input_type
 
 # Make our window
 root = Tk()
@@ -10,7 +46,7 @@ root.geometry("800x450")
 frame = Frame(root)
 frame.pack()
 clicked = StringVar()
-clicked.set("TIFF")
+clicked.set(input_type)
 
 # Make all our GUI objects, named appropriately
 L_title = Label(frame, text = "This is the digitization assistant v 0.2.0. WARNING: This program will overwrite files. Make sure this is the only program generating the target file.")
@@ -20,12 +56,14 @@ L_ph.pack()
 L_im = Label(frame, text = "Directory with image magick.")
 L_im.pack()
 T_im = Text(frame, height = 1)
+T_im.insert(END, im_dir_in)
 T_im.pack()
 L_in = Label(frame, text = "Parent directory of the object/collection or parent directory + file pattern")
 L_in.pack()
 T_in = Text(frame, height = 1)
+T_in.insert(END, ma_dir)
 T_in.pack()
-pt = IntVar()
+pt = IntVar(value = pat_bool)
 C_patt = Checkbutton(frame, text="The above is a file pattern.", variable=pt)
 C_patt.pack()
 L_it = Label(frame, text = "Input type")
@@ -35,18 +73,21 @@ D_it.pack()
 L_dpi = Label(frame, text = "Output DPI for web copy")
 L_dpi.pack()
 T_dpi = Text(frame, height = 1)
+T_dpi.insert(END, output_dpi)
 T_dpi.pack()
 L_size = Label(frame, text = "Output Longest Side in Pixels (for example, 150 dpi * 10 inches = 1500 pixels) for web copy")
 L_size.pack()
 T_size = Text(frame, height = 1)
+T_size.insert(END, output_size)
 T_size.pack()
 L_pdf = Label(frame, text = "PDF file name:")
 L_pdf.pack()
 T_pdf = Text(frame, height = 1)
+T_pdf.insert(END, pdf_name)
 T_pdf.pack()
-jp = IntVar()
-w = IntVar()
-p = IntVar()
+jp = IntVar(value=alt_bool)
+w = IntVar(value=web_bool)
+p = IntVar(value=pdf_bool)
 C_jpeg = Checkbutton(frame, text="Generate 'altered' JPEGs.", variable=jp)
 C_jpeg.pack()
 C_web = Checkbutton(frame, text="Generate 'web' JPEGs.", variable=w)
@@ -94,6 +135,14 @@ def make_pdf(im_dir, in_dir, filename):
 
 # The main function
 def generate(event):
+	global im_dir
+	global in_dir
+	global dpi
+	global size
+	global do_jpeg
+	global do_web
+	global do_pdf
+	global format
 	# Grab imagemagick, and initialize filename
 	im_dir = T_im.get(1.0, "end-1c")
 	filename = ""
@@ -168,6 +217,32 @@ def generate(event):
 # Bind our button to the generate function.
 B_runner.bind('<Button-1>', generate)
 
+def on_closing():
+	global im_dir
+	global in_dir
+	global dpi
+	global size
+	global do_jpeg
+	global do_web
+	global do_pdf
+	global format
+	im_dir_in = im_dir
+	ma_dir = in_dir
+	pat_bool = pt.get()
+	input_type = format
+	output_dpi = dpi
+	output_size = size
+	pdf_name = T_pdf.get(1.0, "end-1c")
+	alt_bool = do_jpeg
+	web_bool = do_web
+	pdf_bool = do_pdf
+	file_out = open("config.cfg", "w")
+	file_out.write("Image Magick-" + im_dir_in + "\nFile path-" + ma_dir + "\nPattern-" + str(int(pat_bool)) + "\nInput Type-" + input_type + "\nOutput DPI-" + str(output_dpi) + "\nOutput size-" + str(output_size) + "\nPDF Name-" + pdf_name + "\nDo Altered-" + str(int(alt_bool)) + "\nDo Web-" + str(int(web_bool)) + "\nDo PDF-" + str(int(pdf_bool)))
+	print(im_dir)
+	time.sleep(1)
+	root.destroy()
+
 # Start the window
+root.protocol("WM_DELETE_WINDOW", on_closing)
 root.title("Digitization File Generator Assistant v0.2.0")
 root.mainloop()
