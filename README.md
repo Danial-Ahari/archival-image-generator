@@ -90,3 +90,4 @@ The below are features that may be added.
 - Port it to the PythonMagick library, as opposed to using native ImageMagick (low priority)
 - ~~Make it save most of the config to a config file for later loading, so one doesn't have to retype (medium priority; added in 0.2.1)~~
 - Make a command line interface that can run from a default config file. (very low priority)
+- Look into open source OCR solutions to see if one can be integrated here. (medium priority)

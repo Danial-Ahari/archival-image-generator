@@ -15,21 +15,39 @@ pdf_name = ""
 alt_bool = 0
 web_bool = 0
 pdf_bool = 0
+hyphen_bool = 1
+delim = "-" # This variable stores our delimiter, either underscore or hyphen; defaults to hyphen
 
 if os.path.exists("config.cfg"):
 	# Open our config file
-	file = open("config.cfg", "r")
-	im_dir_in = file.readline().split('-')[1][:-1]
-	ma_dir = file.readline().split('-')[1][:-1]
-	pat_bool = int(file.readline().split('-')[1])
-	input_type = file.readline().split('-')[1][:-1]
-	output_dpi = file.readline().split('-')[1][:-1]
-	output_size = file.readline().split('-')[1][:-1]
-	pdf_name = file.readline().split('-')[1][:-1]
-	alt_bool = int(file.readline().split('-')[1])
-	web_bool = int(file.readline().split('-')[1])
-	pdf_bool = int(file.readline().split('-')[1])
-	file.close()
+	handle = open("config.cfg", "r")
+	file = handle.readlines()
+	# This is just some code so it fails gracefully if the config file is non-existent, broken, or something like that.
+	for line in file:
+		name, d, value = line.partition(':')
+		if name == "Image Magick":
+			im_dir_in = value[:-1]
+		if name  == "File path":
+			ma_dir = value[:-1]
+		if name == "Pattern":
+			pat_bool = int(value)
+		if name == "Input type":
+			input_type = value[:-1]
+		if name == "Output DPI":
+			output_dpi = value[:-1]
+		if name == "Output size":
+			output_size = value[:-1]
+		if name == "PDF Name":
+			pdf_name = value[:-1]
+		if name == "Do Altered":
+			alt_bool = int(value)
+		if name == "Do Web":
+			web_bool = int(value)
+		if name == "Do PDF":
+			pdf_bool = int(value)
+		if name == "Hyphens":
+			hyphen_bool = int(value)
+	handle.close()
 
 im_dir = im_dir_in
 in_dir = ma_dir
@@ -38,6 +56,7 @@ size = output_size
 do_jpeg = alt_bool
 do_web = web_bool
 do_pdf = pdf_bool
+do_hyphen = hyphen_bool
 format = input_type
 
 # Make our window
@@ -88,12 +107,15 @@ T_pdf.pack()
 jp = IntVar(value=alt_bool)
 w = IntVar(value=web_bool)
 p = IntVar(value=pdf_bool)
+hy = IntVar(value=hyphen_bool)
 C_jpeg = Checkbutton(frame, text="Generate 'altered' JPEGs.", variable=jp)
 C_jpeg.pack()
 C_web = Checkbutton(frame, text="Generate 'web' JPEGs.", variable=w)
 C_web.pack()
 C_pdf = Checkbutton(frame, text="Generate PDF (no OCR).", variable=p)
 C_pdf.pack()
+C_hyphens = Checkbutton(frame, text="Use hyphens instead of underscores.", variable=hy)
+C_hyphens.pack()
 B_runner = Button(frame, text="Generate files")
 B_runner.pack()
 
@@ -107,10 +129,10 @@ def make_jpeg(file, im_dir, in_dir, format):
 
 # This function makes a web copy from the full DPI JPEG, by using imagemagick to scale it to size pixels at dpi DPI
 def make_web(file, im_dir, in_dir, dpi, size):
-	process = subprocess.Popen(im_dir + "magick.exe \"" + in_dir + "altered\\" + file + ".jpg\"" + " -density " + dpi + "x" + dpi + " \"" + in_dir + "altered\\" + file + "_web.jpg\"", shell=TRUE, stdout=subprocess.PIPE)
+	process = subprocess.Popen(im_dir + "magick.exe \"" + in_dir + "altered\\" + file + ".jpg\"" + " -density " + dpi + "x" + dpi + " \"" + in_dir + "altered\\" + file + delim + "web.jpg\"", shell=TRUE, stdout=subprocess.PIPE)
 	process.wait()
-	width = subprocess.check_output(im_dir + "identify.exe -ping -format %w \"" + in_dir + "altered\\" + file + "_web.jpg\"")
-	height = subprocess.check_output(im_dir + "identify.exe -ping -format %h \"" + in_dir + "altered\\" + file + "_web.jpg\"")
+	width = subprocess.check_output(im_dir + "identify.exe -ping -format %w \"" + in_dir + "altered\\" + file + delim + "web.jpg\"")
+	height = subprocess.check_output(im_dir + "identify.exe -ping -format %h \"" + in_dir + "altered\\" + file + delim + "web.jpg\"")
 	new_width = int(0)
 	new_height = int(0)
 	if width > height:
@@ -121,16 +143,16 @@ def make_web(file, im_dir, in_dir, dpi, size):
 		new_height = int(size)
 		ratio = new_height/int(height)
 		new_width = int(width)*ratio
-	process2 = subprocess.Popen(im_dir + "magick.exe \"" + in_dir + "altered\\" + file + "_web.jpg\"" + " -quality 100 -resize " + str(int(new_width)) + "x" + str(int(new_height)) + "! " +  in_dir + "altered\\" + file + "_web.jpg\"", shell=TRUE, stdout=subprocess.PIPE)
+	process2 = subprocess.Popen(im_dir + "magick.exe \"" + in_dir + "altered\\" + file + delim + "web.jpg\"" + " -quality 100 -resize " + str(int(new_width)) + "x" + str(int(new_height)) + "! " +  in_dir + "altered\\" + file + delim + "web.jpg\"", shell=TRUE, stdout=subprocess.PIPE)
 	process2.wait()
 
-# This function creates a PDF from all files in our list that end in _web.jpg
+# This function creates a PDF from all files in our list that end in _web.jpg or -web.jpg
 def make_pdf(im_dir, in_dir, filename):
 	if filename == "":
-		process = subprocess.Popen(im_dir + "magick.exe -quality 100 \"" + in_dir + "altered\\" + "*_web.jpg\"" + " \"" + in_dir + "upload\\" + T_pdf.get(1.0, "end-1c") + ".pdf\"", shell=TRUE, stdout=subprocess.PIPE)
+		process = subprocess.Popen(im_dir + "magick.exe -quality 100 \"" + in_dir + "altered\\" + "*" + delim + "web.jpg\"" + " \"" + in_dir + "upload\\" + T_pdf.get(1.0, "end-1c") + ".pdf\"", shell=TRUE, stdout=subprocess.PIPE)
 		process.wait()
 	else:
-		process = subprocess.Popen(im_dir + "magick.exe -quality 100 \"" + in_dir + "altered\\" + filename + "*_web.jpg\"" + " \"" + in_dir + "upload\\" + T_pdf.get(1.0, "end-1c") + ".pdf\"", shell=TRUE, stdout=subprocess.PIPE)
+		process = subprocess.Popen(im_dir + "magick.exe -quality 100 \"" + in_dir + "altered\\" + filename + "*" + delim + "web.jpg\"" + " \"" + in_dir + "upload\\" + T_pdf.get(1.0, "end-1c") + ".pdf\"", shell=TRUE, stdout=subprocess.PIPE)
 		process.wait()
 
 # The main function
@@ -142,6 +164,8 @@ def generate(event):
 	global do_jpeg
 	global do_web
 	global do_pdf
+	global do_hyphen
+	global delim
 	global format
 	# Grab imagemagick, and initialize filename
 	im_dir = T_im.get(1.0, "end-1c")
@@ -158,6 +182,7 @@ def generate(event):
 	do_jpeg = jp.get()
 	do_web = w.get()
 	do_pdf = p.get()
+	do_hyphen = hy.get()
 	format = clicked.get()
 	# Initialize and generate a files list appropriately
 	files = []
@@ -177,10 +202,10 @@ def generate(event):
 			files = os.listdir(in_dir + "altered\\")
 			for file in files:
 				if pt.get() == 0:
-					if file[-4:] == ".jpg" and file[-8:] != "_web.jpg":
+					if file[-4:] == ".jpg" and file[-8:] != "_web.jpg" and file[-8:] != "-web.jpg":
 						fin_files.append(file)
 				else:
-					if file[-4:] == ".jpg" and file[-8:] != "_web.jpg":
+					if file[-4:] == ".jpg" and file[-8:] != "_web.jpg" and file[-8:] != "-web.jpg":
 						if file[:len(filename)] == filename:
 							fin_files.append(file)
 		else: # Here, we are using JPEG, but we do not have altered files, assume master JPEG files.
@@ -193,6 +218,11 @@ def generate(event):
 					if file[-4:] == ".jpg":
 						if file[:len(filename)] == filename:
 							fin_files.append(file)
+	# Make our delim match our input for the next step:
+	if hy.get() == 1:
+		delim = "-"
+	else:
+		delim = "_"
 	# Conditionally perform the actual image generation, after creating folders for the outputs.
 	if(do_jpeg == 1): # Make altered directory.
 		try:
@@ -226,6 +256,7 @@ def on_closing():
 	global do_web
 	global do_pdf
 	global format
+	global do_hyphen
 	im_dir_in = im_dir
 	ma_dir = in_dir
 	pat_bool = pt.get()
@@ -236,13 +267,13 @@ def on_closing():
 	alt_bool = do_jpeg
 	web_bool = do_web
 	pdf_bool = do_pdf
+	hyphen_bool = do_hyphen
 	file_out = open("config.cfg", "w")
-	file_out.write("Image Magick-" + im_dir_in + "\nFile path-" + ma_dir + "\nPattern-" + str(int(pat_bool)) + "\nInput Type-" + input_type + "\nOutput DPI-" + str(output_dpi) + "\nOutput size-" + str(output_size) + "\nPDF Name-" + pdf_name + "\nDo Altered-" + str(int(alt_bool)) + "\nDo Web-" + str(int(web_bool)) + "\nDo PDF-" + str(int(pdf_bool)))
-	print(im_dir)
+	file_out.write("Image Magick:" + im_dir_in + "\nFile path:" + ma_dir + "\nPattern:" + str(int(pat_bool)) + "\nInput Type:" + input_type + "\nOutput DPI:" + str(output_dpi) + "\nOutput size:" + str(output_size) + "\nPDF Name:" + pdf_name + "\nDo Altered:" + str(int(alt_bool)) + "\nDo Web:" + str(int(web_bool)) + "\nDo PDF:" + str(int(pdf_bool)) + "\nHyphens:" + str(int(hyphen_bool)))
 	time.sleep(1)
 	root.destroy()
 
 # Start the window
 root.protocol("WM_DELETE_WINDOW", on_closing)
-root.title("Digitization File Generator Assistant v0.2.0")
+root.title("Digitization File Generator Assistant v0.3.0")
 root.mainloop()
