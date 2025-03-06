@@ -129,7 +129,7 @@ def make_jpeg(file, im_dir, in_dir, format):
 
 # This function makes a web copy from the full DPI JPEG, by using imagemagick to scale it to size pixels at dpi DPI
 def make_web(file, im_dir, in_dir, dpi, size):
-	process = subprocess.Popen(im_dir + "magick.exe \"" + in_dir + "altered\\" + file + ".jpg\"" + " -density " + dpi + "x" + dpi + " \"" + in_dir + "altered\\" + file + "_web.jpg\"", shell=TRUE, stdout=subprocess.PIPE)
+	process = subprocess.Popen(im_dir + "magick.exe \"" + in_dir + "altered\\" + file + ".jpg\"" + " -density " + dpi + "x" + dpi + " \"" + in_dir + "altered\\" + file + delim + "web.jpg\"", shell=TRUE, stdout=subprocess.PIPE)
 	process.wait()
 	width = subprocess.check_output(im_dir + "identify.exe -ping -format %w \"" + in_dir + "altered\\" + file + delim + "web.jpg\"")
 	height = subprocess.check_output(im_dir + "identify.exe -ping -format %h \"" + in_dir + "altered\\" + file + delim + "web.jpg\"")
@@ -143,7 +143,7 @@ def make_web(file, im_dir, in_dir, dpi, size):
 		new_height = int(size)
 		ratio = new_height/int(height)
 		new_width = int(width)*ratio
-	process2 = subprocess.Popen(im_dir + "magick.exe \"" + in_dir + "altered\\" + file + delim + "web.jpg\"" + " -quality 100 -resize " + str(int(new_width)) + "x" + str(int(new_height)) + "! " +  in_dir + "altered\\" + file + +delim + "web.jpg\"", shell=TRUE, stdout=subprocess.PIPE)
+	process2 = subprocess.Popen(im_dir + "magick.exe \"" + in_dir + "altered\\" + file + delim + "web.jpg\"" + " -quality 100 -resize " + str(int(new_width)) + "x" + str(int(new_height)) + "! " +  in_dir + "altered\\" + file + delim + "web.jpg\"", shell=TRUE, stdout=subprocess.PIPE)
 	process2.wait()
 
 # This function creates a PDF from all files in our list that end in _web.jpg or -web.jpg
