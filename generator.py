@@ -68,7 +68,7 @@ clicked = StringVar()
 clicked.set(input_type)
 
 # Make all our GUI objects, named appropriately
-L_title = Label(frame, text = "This is the digitization assistant v 0.2.0. WARNING: This program will overwrite files. Make sure this is the only program generating the target file.")
+L_title = Label(frame, text = "This is the digitization assistant v 0.3.0. WARNING: This program will overwrite files. Make sure this is the only program generating the target file.")
 L_title.pack()
 L_ph = Label(frame)
 L_ph.pack()
